@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain</title>
+</head>
+<body>
+    <h1>Wallet</h1>
+    <div>
+        <p id="balance">0</p>
+        <a href="/"><button id="reload">Reload Wallet</button></a>
+    </div>
+
+    <div>
+        <h3>Public key</h3>
+        <input style="width: 300px;" type="text" name="" id="pub-key">
+    </div>
+
+    <div>
+        <h3>Private key</h3>
+        <input style="width: 300px;" type="text" name="" id="priv-key">
+    </div>
+
+    <div>
+        <h3>Blockchain Address</h3>
+        <input style="width: 300px;" type="text" name="" id="blockchain-addr">
+    </div>
+
+    <h1>Send Money</h1>
+    <div>
+        <h3>Recipient Address</h3>
+        <input style="width: 300px;" type="text" name="" id="recipient-address">
+
+        <h3>Amount</h3>
+        <input style="width: 300px;" type="text" name="" id="amount">
+
+        <br>
+        <br>
+        
+        <button id="send">Send</button>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <script>
+        $(() => {
+            $.ajax({
+                url: "/wallet",
+                type:"Get",
+                contentType: "application/json",
+                success: (response) => {
+                    console.info(response)
+                    let data = JSON.parse(response)
+                    $("#pub-key").val(data["publicKey"]);
+                   
+                    $("#priv-key").val(data["privateKey"]);
+                    
+                    $("#blockchain-addr").val(data["blockchainAddr"]);
+                },
+                error: (error) => {
+                    console.error(error)
+                }
+            })
+        })
+    </script>
+</body>
+</html>
