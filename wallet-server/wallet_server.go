@@ -5,6 +5,8 @@ import (
 	"flag"
 	"go-block-chain-dev/wallet"
 	"html/template"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -36,28 +38,43 @@ func (ws *WalletServer) Index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (ws *WalletServer) WalletInfo(w http.ResponseWriter, r *http.Request) {
+	wall, ok := walletCache["wallet"]
+	if !ok {
+		wall = wallet.NewWallet()
+		walletCache["wallet"] = wall
+	}
+
+	if err := json.NewEncoder(w).Encode(struct {
+		Pub            string `json:"publicKey"`
+		Priv           string `json:"privateKey"`
+		BlockchainAddr string `json:"blockchainAddr"`
+	}{
+		Pub:            wall.GetPublicKeyString(),
+		Priv:           wall.GetPrivateKeyString(),
+		BlockchainAddr: wall.GetBlockChainAddress(),
+	}); err != nil {
+		log.Println("error occured", err)
+	}
+}
+
+func(ws *WalletServer)CreateTransanction(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		bs, _ := ioutil.ReadAll(r.Body)
+		log.Println("Body:", string(bs))
+		w.WriteHeader(http.StatusOK)
+		io.WriteString(w, "success")
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		log.Println("invalid method")
+	}
+}
+
 func (ws *WalletServer) Run() {
 	http.HandleFunc("/", ws.Index)
-
-	http.HandleFunc("/wallet", func(w http.ResponseWriter, r *http.Request) {
-		wall, ok := walletCache["wallet"]
-		if !ok {
-			wall = wallet.NewWallet()
-			walletCache["wallet"] = wall
-		}
-
-		if err := json.NewEncoder(w).Encode(struct {
-			Pub            string `json:"publicKey"`
-			Priv           string `json:"privateKey"`
-			BlockchainAddr string `json:"blockchainAddr"`
-		}{
-			Pub:            wall.GetPublicKeyString(),
-			Priv:           wall.GetPrivateKeyString(),
-			BlockchainAddr: wall.GetBlockChainAddress(),
-		}); err != nil {
-			log.Println("error occured", err)
-		}
-	})
+	http.HandleFunc("/wallet", ws.WalletInfo)
+	http.HandleFunc("/transanction", ws.CreateTransanction)
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(int(ws.GetPort())), nil))
 }
 
